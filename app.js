@@ -1,27 +1,37 @@
-import { DOMAINS, QUESTIONS } from "./questions.js";
+import { DOMAINS, MATURITY_DIMENSIONS, CONTROLS, TOPOLOGY_ZONES, CONNECTION_TYPES, TOPOLOGY_RULES } from "./questions.js";
 
-class OTAssessmentApp {
+class AdvancedOTAssessmentApp {
   constructor() {
-    this.currentQuestionIndex = 0;
-    this.answers = {}; // Format: { Q1: score, Q2: score, ... }
-    this.isCompleted = false;
-    this.activeFilter = "all";
+    this.activeTab = "topology";
+    
+    // Application State
+    this.topologyConnections = {
+      "enterprise_safety": "none",
+      "enterprise_control": "direct",
+      "enterprise_operations": "permissive_firewall",
+      "operations_safety": "permissive_firewall",
+      "control_safety": "direct"
+    };
+    
+    this.grades = {}; // Format: { C1: { P: 0, T: 0, L: 0, A: 0 }, ... }
+    
+    // Initialize empty grades
+    CONTROLS.forEach(c => {
+      this.grades[c.id] = { P: 0, T: 0, L: 0, A: 0 };
+    });
     
     // Cache DOM Elements
     this.elements = {
-      progressSidebar: document.getElementById("progress-sidebar"),
-      questionContainer: document.getElementById("question-container"),
-      resultsContainer: document.getElementById("results-container"),
+      // Tab Links
+      tabLinks: document.querySelectorAll(".tab-link"),
+      tabContents: document.querySelectorAll(".tab-content"),
       
-      // Question UI Elements
-      domainBadge: document.getElementById("domain-badge"),
-      domainTitle: document.getElementById("domain-title"),
-      questionMeta: document.getElementById("question-meta"),
-      questionText: document.getElementById("question-text"),
-      choicesList: document.getElementById("choices-list"),
-      btnPrev: document.getElementById("btn-prev"),
-      btnNext: document.getElementById("btn-next"),
-      btnFinish: document.getElementById("btn-finish"),
+      // Modeler Elements
+      topologySelectsContainer: document.getElementById("topology-selects-container"),
+      topologyAlertsContainer: document.getElementById("topology-alerts-container"),
+      
+      // Matrix Input Elements
+      matrixContainer: document.getElementById("matrix-container"),
       
       // Results Elements
       overallMaturityNumber: document.getElementById("overall-maturity-number"),
@@ -32,16 +42,17 @@ class OTAssessmentApp {
       pctNca: document.getElementById("pct-nca"),
       radarChartContainer: document.getElementById("radar-chart-container"),
       domainBarsContainer: document.getElementById("domain-bars-container"),
-      roadmapList: document.getElementById("roadmap-list"),
-      filterButtons: document.querySelectorAll(".filter-btn"),
+      timelineContainer: document.getElementById("timeline-container"),
+      architectureGapsList: document.getElementById("architecture-gaps-list"),
+      architectureGapsSection: document.getElementById("architecture-gaps-section"),
       
-      // Action Buttons
+      // Action Elements
       btnExportJson: document.getElementById("btn-export-json"),
       btnImportJson: document.getElementById("btn-import-json"),
       fileInput: document.getElementById("file-input"),
       btnPrintPdf: document.getElementById("btn-print-pdf"),
-      btnEditAnswers: document.getElementById("btn-edit-answers"),
       btnRestart: document.getElementById("btn-restart"),
+      btnGenerateReport: document.getElementById("btn-generate-report"),
       
       // Form Elements
       leadForm: document.getElementById("lead-form"),
@@ -55,315 +66,393 @@ class OTAssessmentApp {
   init() {
     this.setupEventListeners();
     this.loadState();
-    this.renderSidebar();
-    
-    if (this.isCompleted) {
-      this.showResults();
-    } else {
-      this.showQuestion(this.currentQuestionIndex);
-    }
+    this.renderTopologyModeler();
+    this.renderMaturityMatrix();
+    this.evaluateTopology();
+    this.switchTab(this.activeTab);
   }
   
   setupEventListeners() {
-    // Nav buttons
-    this.elements.btnPrev.addEventListener("click", () => this.navigateQuestion(-1));
-    this.elements.btnNext.addEventListener("click", () => this.navigateQuestion(1));
-    this.elements.btnFinish.addEventListener("click", () => this.finishAssessment());
+    // Tab switching
+    this.elements.tabLinks.forEach(link => {
+      link.addEventListener("click", () => {
+        this.switchTab(link.dataset.tab);
+      });
+    });
     
-    // Action buttons
+    // Action trigger on assessment completion
+    if (this.elements.btnGenerateReport) {
+      this.elements.btnGenerateReport.addEventListener("click", () => {
+        this.switchTab("results");
+      });
+    }
+    
+    // Global Actions
     this.elements.btnExportJson.addEventListener("click", () => this.exportStateToJSON());
     this.elements.btnImportJson.addEventListener("click", () => this.elements.fileInput.click());
     this.elements.fileInput.addEventListener("change", (e) => this.importStateFromJSON(e));
     this.elements.btnPrintPdf.addEventListener("click", () => window.print());
-    this.elements.btnEditAnswers.addEventListener("click", () => this.editAnswers());
     this.elements.btnRestart.addEventListener("click", () => this.restartAssessment());
     
-    // Filters for Roadmap
-    this.elements.filterButtons.forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        this.elements.filterButtons.forEach(b => b.classList.remove("active"));
-        e.target.classList.add("active");
-        this.activeFilter = e.target.dataset.priority;
-        this.renderRoadmap();
-      });
-    });
-    
-    // Contact Form Submit
+    // Form Submit
     this.elements.leadForm.addEventListener("submit", (e) => this.handleLeadSubmit(e));
   }
   
   loadState() {
     try {
-      const saved = localStorage.getItem("ot_cyber_assessment_state");
+      const saved = localStorage.getItem("ot_cyber_advanced_audit_state");
       if (saved) {
         const state = JSON.parse(saved);
-        this.currentQuestionIndex = state.currentQuestionIndex || 0;
-        this.answers = state.answers || {};
-        this.isCompleted = state.isCompleted || false;
+        this.topologyConnections = state.topologyConnections || this.topologyConnections;
+        this.grades = state.grades || this.grades;
+        this.activeTab = state.activeTab || "topology";
       }
     } catch (e) {
-      console.error("Failed to load local state:", e);
+      console.error("Failed to load local storage state:", e);
     }
   }
   
   saveState() {
     try {
       const state = {
-        currentQuestionIndex: this.currentQuestionIndex,
-        answers: this.answers,
-        isCompleted: this.isCompleted
+        topologyConnections: this.topologyConnections,
+        grades: this.grades,
+        activeTab: this.activeTab
       };
-      localStorage.setItem("ot_cyber_assessment_state", JSON.stringify(state));
+      localStorage.setItem("ot_cyber_advanced_audit_state", JSON.stringify(state));
     } catch (e) {
-      console.error("Failed to save local state:", e);
+      console.error("Failed to save local storage state:", e);
     }
   }
   
-  renderSidebar() {
-    this.elements.progressSidebar.innerHTML = "";
-    
-    // Group questions by domains for sidebar grouping
-    Object.values(DOMAINS).forEach((domain, index) => {
-      const domainQs = QUESTIONS.filter(q => q.domain === domain.id);
-      const isCurrentDomain = QUESTIONS[this.currentQuestionIndex].domain === domain.id;
-      
-      const allDone = domainQs.every(q => this.answers[q.id] !== undefined);
-      const someDone = domainQs.some(q => this.answers[q.id] !== undefined);
-      
-      let statusClass = "";
-      if (isCurrentDomain && !this.isCompleted) {
-        statusClass = "active";
-      } else if (allDone) {
-        statusClass = "completed";
-      }
-      
-      const item = document.createElement("li");
-      item.className = `progress-item ${statusClass}`;
-      
-      // Click sidebar to jump to the first question in that domain
-      item.addEventListener("click", () => {
-        if (this.isCompleted) return;
-        const qIndex = QUESTIONS.findIndex(q => q.domain === domain.id);
-        if (qIndex !== -1) {
-          this.currentQuestionIndex = qIndex;
-          this.showQuestion(this.currentQuestionIndex);
-          this.renderSidebar();
-        }
-      });
-      
-      item.innerHTML = `
-        <div class="step-indicator">
-          ${allDone ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>` : index + 1}
-        </div>
-        <div class="step-name" title="${domain.title}">
-          ${domain.title}
-        </div>
-      `;
-      
-      this.elements.progressSidebar.appendChild(item);
-    });
-  }
-  
-  showQuestion(index) {
-    if (this.isCompleted) return;
-    
-    this.elements.questionContainer.style.display = "block";
-    this.elements.resultsContainer.style.display = "none";
-    
-    const question = QUESTIONS[index];
-    const domain = DOMAINS[question.domain];
-    
-    // Set domain styling
-    this.elements.domainBadge.innerText = domain.id;
-    this.elements.domainBadge.style.backgroundColor = `${domain.color}20`;
-    this.elements.domainBadge.style.color = domain.color;
-    this.elements.domainBadge.style.border = `1px solid ${domain.color}40`;
-    
-    this.elements.domainTitle.innerText = domain.title;
-    
-    // Metadata / Standards Mapped
-    this.elements.questionMeta.innerHTML = `
-      <span>Standard Mappings:</span>
-      <span class="standards-tag">${question.standards.iec}</span>
-      <span class="standards-tag">${question.standards.nerc}</span>
-      <span class="standards-tag">${question.standards.nca}</span>
-    `;
-    
-    this.elements.questionText.innerText = question.text;
-    
-    // Render Choices
-    this.elements.choicesList.innerHTML = "";
-    question.choices.forEach((choice, cIdx) => {
-      const choiceCard = document.createElement("div");
-      
-      const isSelected = this.answers[question.id] === choice.score;
-      choiceCard.className = `choice-card ${isSelected ? "selected" : ""}`;
-      
-      choiceCard.innerHTML = `
-        <div class="radio-indicator"></div>
-        <div class="choice-content">
-          <div class="choice-level">Level ${choice.level}</div>
-          <div class="choice-text">${choice.text}</div>
-        </div>
-      `;
-      
-      choiceCard.addEventListener("click", () => {
-        // Save answer
-        this.answers[question.id] = choice.score;
-        this.saveState();
-        
-        // Visual updates
-        const selectedPrev = this.elements.choicesList.querySelector(".choice-card.selected");
-        if (selectedPrev) selectedPrev.classList.remove("selected");
-        choiceCard.classList.add("selected");
-        
-        // Enable buttons
-        this.updateNavButtonsState();
-        this.renderSidebar();
-      });
-      
-      this.elements.choicesList.appendChild(choiceCard);
-    });
-    
-    this.updateNavButtonsState();
-  }
-  
-  updateNavButtonsState() {
-    this.elements.btnPrev.disabled = this.currentQuestionIndex === 0;
-    
-    const hasAnsweredCurrent = this.answers[QUESTIONS[this.currentQuestionIndex].id] !== undefined;
-    const isLastQuestion = this.currentQuestionIndex === QUESTIONS.length - 1;
-    
-    if (isLastQuestion) {
-      this.elements.btnNext.style.display = "none";
-      this.elements.btnFinish.style.display = "inline-flex";
-      this.elements.btnFinish.disabled = !hasAnsweredCurrent;
-    } else {
-      this.elements.btnNext.style.display = "inline-flex";
-      this.elements.btnFinish.style.display = "none";
-      this.elements.btnNext.disabled = !hasAnsweredCurrent;
-    }
-  }
-  
-  navigateQuestion(direction) {
-    const nextIndex = this.currentQuestionIndex + direction;
-    if (nextIndex >= 0 && nextIndex < QUESTIONS.length) {
-      this.currentQuestionIndex = nextIndex;
-      
-      // Animate container out and in
-      this.elements.questionContainer.classList.remove("fade-in");
-      void this.elements.questionContainer.offsetWidth; // Trigger reflow
-      this.elements.questionContainer.classList.add("fade-in");
-      
-      this.showQuestion(this.currentQuestionIndex);
-      this.renderSidebar();
-      this.saveState();
-    }
-  }
-  
-  finishAssessment() {
-    // Verify all answered
-    const allAnswered = QUESTIONS.every(q => this.answers[q.id] !== undefined);
-    if (!allAnswered) {
-      alert("Please complete all questions before finishing.");
-      return;
-    }
-    
-    this.isCompleted = true;
+  switchTab(tabId) {
+    this.activeTab = tabId;
     this.saveState();
-    this.showResults();
-    this.renderSidebar();
+    
+    this.elements.tabLinks.forEach(link => {
+      if (link.dataset.tab === tabId) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+    
+    this.elements.tabContents.forEach(content => {
+      if (content.id === `tab-content-${tabId}`) {
+        content.style.display = "block";
+      } else {
+        content.style.display = "none";
+      }
+    });
+    
+    if (tabId === "results") {
+      this.showResults();
+    }
   }
   
+  /* =========================================================================
+     1. OT Boundary Topology Modeler
+     ========================================================================= */
+  renderTopologyModeler() {
+    this.elements.topologySelectsContainer.innerHTML = "";
+    
+    // Render selectors for the 5 key boundaries
+    const boundaryPairs = [
+      { id: "enterprise_safety", name: "Enterprise Zone to Safety Systems", desc: "Corporate LAN directly to Level 0 Safety Instrumented systems (SIS)", key: "enterprise_safety" },
+      { id: "enterprise_control", name: "Enterprise Zone to Process Control", desc: "Corporate LAN to Level 1/2 PLC networks", key: "enterprise_control" },
+      { id: "enterprise_operations", name: "Enterprise Zone to Operations", desc: "Corporate LAN to Level 3 SCADA databases/historians", key: "enterprise_operations" },
+      { id: "operations_safety", name: "Operations Zone to Safety Systems", desc: "Level 3 SCADA servers directly to Level 0 Safety Systems", key: "operations_safety" },
+      { id: "control_safety", name: "Process Control to Safety Systems", desc: "Level 1/2 controllers to Level 0 Safety System controllers", key: "control_safety" }
+    ];
+    
+    boundaryPairs.forEach(pair => {
+      const row = document.createElement("tr");
+      
+      let optionsHTML = "";
+      Object.values(CONNECTION_TYPES).forEach(type => {
+        const isSelected = this.topologyConnections[pair.key] === type.id;
+        optionsHTML += `<option value="${type.id}" ${isSelected ? "selected" : ""}>${type.name}</option>`;
+      });
+      
+      row.innerHTML = `
+        <td>
+          <div class="zone-label">${pair.name}</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">${pair.desc}</div>
+        </td>
+        <td>
+          <select class="connection-select" data-key="${pair.key}">
+            ${optionsHTML}
+          </select>
+        </td>
+      `;
+      
+      // Bind event listener to connection select fields
+      const select = row.querySelector("select");
+      select.addEventListener("change", (e) => {
+        this.topologyConnections[pair.key] = e.target.value;
+        this.saveState();
+        this.evaluateTopology();
+      });
+      
+      this.elements.topologySelectsContainer.appendChild(row);
+    });
+  }
+  
+  evaluateTopology() {
+    this.elements.topologyAlertsContainer.innerHTML = "";
+    const activeViolations = [];
+    
+    TOPOLOGY_RULES.forEach(rule => {
+      // Find the active connection value for this rule
+      const key = `${rule.zoneA}_${rule.zoneB}`;
+      const activeConn = this.topologyConnections[key];
+      
+      if (rule.forbidden.includes(activeConn)) {
+        activeViolations.push(rule);
+        
+        // Render rule validation card on modeler screen
+        const alertCard = document.createElement("div");
+        alertCard.className = `rule-alert-card severity-${rule.severity.toLowerCase()} fade-in`;
+        alertCard.innerHTML = `
+          <div class="rule-header">
+            <span>${rule.severity} ARCHITECTURAL VIOLATION</span>
+            <span class="rule-standard">${rule.standard}</span>
+          </div>
+          <div>${rule.message}</div>
+          <div style="font-size: 0.75rem; font-weight: 600; margin-top: 5px;">Active configuration: ${CONNECTION_TYPES[activeConn].name}</div>
+        `;
+        this.elements.topologyAlertsContainer.appendChild(alertCard);
+      }
+    });
+    
+    if (activeViolations.length === 0) {
+      this.elements.topologyAlertsContainer.innerHTML = `
+        <div style="text-align: center; color: var(--accent-green); background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem;">
+          ✓ Zone boundary architecture is compliant with basic zoning rules. No structural bypasses detected.
+        </div>
+      `;
+    }
+    
+    return activeViolations;
+  }
+  
+  /* =========================================================================
+     2. Multi-Dimensional Maturity Matrix
+     ========================================================================= */
+  renderMaturityMatrix() {
+    this.elements.matrixContainer.innerHTML = "";
+    
+    CONTROLS.forEach(control => {
+      const block = document.createElement("div");
+      block.className = "control-block";
+      
+      const domain = DOMAINS[control.domain];
+      
+      block.innerHTML = `
+        <div class="control-header">
+          <span class="control-domain-badge" style="background-color: ${domain.color};">${domain.id}</span>
+          <span class="control-title">${control.title}</span>
+        </div>
+        <div class="control-description">${control.description}</div>
+        <div class="matrix-grid"></div>
+      `;
+      
+      const grid = block.querySelector(".matrix-grid");
+      
+      // Render the 4 C2M2 maturity dimensions for this control requirement
+      Object.values(MATURITY_DIMENSIONS).forEach(dim => {
+        const card = document.createElement("div");
+        card.className = "dimension-card";
+        
+        card.innerHTML = `
+          <div class="dimension-header-text" title="${dim.desc}">${dim.name}</div>
+          <div class="grade-btn-group">
+            <button class="grade-btn" data-val="0" title="Not Existent / Absent">L0</button>
+            <button class="grade-btn" data-val="1" title="Draft Policy / Ad-hoc Setup">L1</button>
+            <button class="grade-btn" data-val="2" title="Approved / Technically Implemented">L2</button>
+            <button class="grade-btn" data-val="3" title="Continuously Audited / Optimized">L3</button>
+          </div>
+        `;
+        
+        const buttons = card.querySelectorAll(".grade-btn");
+        const activeScore = this.grades[control.id][dim.id];
+        
+        buttons.forEach(btn => {
+          const val = parseInt(btn.dataset.val);
+          if (val === activeScore) {
+            btn.classList.add("selected");
+          }
+          
+          btn.addEventListener("click", () => {
+            buttons.forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            
+            // Save state
+            this.grades[control.id][dim.id] = val;
+            this.saveState();
+          });
+        });
+        
+        grid.appendChild(card);
+      });
+      
+      this.elements.matrixContainer.appendChild(block);
+    });
+  }
+  
+  /* =========================================================================
+     3. Score Aggregations & Dashboard Logic
+     ========================================================================= */
   showResults() {
-    this.elements.questionContainer.style.display = "none";
     this.elements.resultsContainer.style.display = "block";
     this.elements.resultsContainer.classList.add("fade-in");
     
+    // 1. Calculations
     const scores = this.calculateScores();
-    this.renderMaturityScore(scores.overallScore);
-    this.renderStandardsCompliance(scores.standardsPct);
+    
+    // 2. Main Metrics Rendering
+    this.renderMaturityIndex(scores.overallScore);
+    this.renderStandardComplaince(scores.standardsPct);
+    
+    // 3. Topology Breach Report List
+    this.renderTopologyBreaches();
+    
+    // 4. SVG Graphical Renderers
     this.renderDomainBars(scores.domainScores);
     this.renderRadarChart(scores.domainScores);
-    this.renderRoadmap();
+    
+    // 5. Gantt Timeline Timeline Compiler
+    this.renderPhasedTimeline(scores.remediations);
   }
   
   calculateScores() {
     let totalScore = 0;
-    let maxTotalScore = QUESTIONS.length * 3; // 15 questions * max score 3
+    const maxPossibleScore = CONTROLS.length * 4 * 3; // 10 controls * 4 dimensions * max score 3 = 120
     
     const domainTotals = {};
     const domainCounts = {};
     
-    // Standard-specific tracking
-    const standardScores = { iec: 0, nerc: 0, nca: 0 };
-    const standardCounts = { iec: 0, nerc: 0, nca: 0 };
+    // C2M2 Dimension Tracking
+    const dimensionTotals = { P: 0, T: 0, L: 0, A: 0 };
+    const dimensionCounts = { P: 0, T: 0, L: 0, A: 0 };
     
     Object.keys(DOMAINS).forEach(d => {
       domainTotals[d] = 0;
       domainCounts[d] = 0;
     });
     
-    QUESTIONS.forEach(q => {
-      const ans = this.answers[q.id] || 0;
-      totalScore += ans;
+    const remediationsList = [];
+    
+    CONTROLS.forEach(c => {
+      const controlGrades = this.grades[c.id];
       
-      domainTotals[q.domain] += ans;
-      domainCounts[q.domain]++;
-      
-      // All questions map to standard schemas. We benchmark relative level achieved (out of 3)
-      standardScores.iec += ans;
-      standardCounts.iec += 3;
-      
-      standardScores.nerc += ans;
-      standardCounts.nerc += 3;
-      
-      standardScores.nca += ans;
-      standardCounts.nca += 3;
+      Object.keys(MATURITY_DIMENSIONS).forEach(dim => {
+        const grade = controlGrades[dim] || 0;
+        totalScore += grade;
+        
+        domainTotals[c.domain] += grade;
+        domainCounts[c.domain]++;
+        
+        dimensionTotals[dim] += grade;
+        dimensionCounts[dim]++;
+        
+        // If a control dimension falls below standard Level 2, we schedule remediation
+        if (grade < 2) {
+          remediationsList.push({
+            controlId: c.id,
+            controlTitle: c.title,
+            domain: c.domain,
+            dimensionId: dim,
+            dimensionName: MATURITY_DIMENSIONS[dim].name,
+            action: c.remediations[dim],
+            score: grade
+          });
+        }
+      });
     });
     
-    const overallScore = (totalScore / maxTotalScore) * 3; // Standardize to 0 - 3 range
+    // Compute standardized indices (0.0 - 3.0 scale)
+    const overallScore = (totalScore / maxPossibleScore) * 3;
     
     const domainScores = {};
     Object.keys(DOMAINS).forEach(d => {
-      domainScores[d] = (domainTotals[d] / (domainCounts[d] * 3)) * 3; // 0 - 3 range
+      domainScores[d] = (domainTotals[d] / (domainCounts[d] * 3)) * 3;
     });
+    
+    // Standard-specific weighted index algorithms
+    // IEC 62443: Weighted focus across all operational levels
+    const pPct = (dimensionTotals.P / (dimensionCounts.P * 3));
+    const tPct = (dimensionTotals.T / (dimensionCounts.T * 3));
+    const lPct = (dimensionTotals.L / (dimensionCounts.L * 3));
+    const aPct = (dimensionTotals.A / (dimensionCounts.A * 3));
+    
+    const iecScore = Math.round((pPct * 0.25 + tPct * 0.45 + lPct * 0.15 + aPct * 0.15) * 100);
+    // NERC CIP: Technical enforcement focus (70% tech, 30% audit)
+    const nercScore = Math.round((tPct * 0.70 + aPct * 0.30) * 100);
+    // NCA ECC: Governance and audit verification focus (40% policy, 20% training, 40% audit)
+    const ncaScore = Math.round((pPct * 0.40 + lPct * 0.20 + aPct * 0.40) * 100);
     
     return {
       overallScore: Number(overallScore.toFixed(2)),
       domainScores,
       standardsPct: {
-        iec: Math.round((standardScores.iec / standardCounts.iec) * 100),
-        nerc: Math.round((standardScores.nerc / standardCounts.nerc) * 100),
-        nca: Math.round((standardScores.nca / standardCounts.nca) * 100)
-      }
+        iec: Math.min(100, Math.max(0, iecScore)),
+        nerc: Math.min(100, Math.max(0, nercScore)),
+        nca: Math.min(100, Math.max(0, ncaScore))
+      },
+      remediations: remediationsList
     };
   }
   
-  renderMaturityScore(score) {
+  renderMaturityIndex(score) {
     this.elements.overallMaturityNumber.innerText = score.toFixed(1);
     
     let text = "Ad-hoc (Level 1)";
-    if (score > 2.7) {
+    if (score > 2.6) {
       text = "Optimized (Level 4)";
-    } else if (score > 2.0) {
+    } else if (score > 1.8) {
       text = "Managed (Level 3)";
-    } else if (score > 1.0) {
+    } else if (score > 0.9) {
       text = "Developing (Level 2)";
     }
     
     this.elements.overallMaturityText.innerText = text;
     
-    // Animate radial SVG gauge (dashoffset formula: 440 - (440 * pct))
+    // Adjust radial gauge meter (dashoffset formula: 440 - (440 * pct))
     const pct = score / 3.0;
     const offset = 440 - (440 * pct);
     this.elements.radialProgress.style.strokeDashoffset = offset;
   }
   
-  renderStandardsCompliance(standards) {
+  renderStandardComplaince(standards) {
     this.elements.pctIec.innerText = `${standards.iec}%`;
     this.elements.pctNerc.innerText = `${standards.nerc}%`;
     this.elements.pctNca.innerText = `${standards.nca}%`;
+  }
+  
+  renderTopologyBreaches() {
+    this.elements.architectureGapsList.innerHTML = "";
+    const violations = this.evaluateTopology();
+    
+    if (violations.length === 0) {
+      this.elements.architectureGapsSection.style.display = "none";
+      return;
+    }
+    
+    this.elements.architectureGapsSection.style.display = "block";
+    violations.forEach(v => {
+      const item = document.createElement("div");
+      item.className = `rule-alert-card severity-${v.severity.toLowerCase()}`;
+      item.style.marginBottom = "0.5rem";
+      item.innerHTML = `
+        <div class="rule-header">
+          <span>${v.severity} Architecture Defect</span>
+          <span class="rule-standard">${v.standard}</span>
+        </div>
+        <div>${v.message}</div>
+      `;
+      this.elements.architectureGapsList.appendChild(item);
+    });
   }
   
   renderDomainBars(domainScores) {
@@ -381,13 +470,12 @@ class OTAssessmentApp {
           <span class="bar-score" style="color: ${domain.color}">${score.toFixed(1)} / 3.0</span>
         </div>
         <div class="bar-outer">
-          <div class="bar-inner" style="width: 0%; background: linear-gradient(90deg, ${domain.color}a0, ${domain.color})"></div>
+          <div class="bar-inner" style="width: 0%; background: ${domain.color}"></div>
         </div>
       `;
       
       this.elements.domainBarsContainer.appendChild(barWrapper);
       
-      // Delay animation slightly to show transition
       setTimeout(() => {
         const inner = barWrapper.querySelector(".bar-inner");
         if (inner) inner.style.width = `${pct}%`;
@@ -398,21 +486,19 @@ class OTAssessmentApp {
   renderRadarChart(domainScores) {
     this.elements.radarChartContainer.innerHTML = "";
     
-    const size = 260;
+    const size = 240;
     const center = size / 2;
     const maxVal = 3.0;
-    const radius = 90;
+    const radius = 80;
     const domainKeys = Object.keys(DOMAINS);
     const numPoints = domainKeys.length;
     
-    // Create SVG Element
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", "100%");
     svg.setAttribute("height", "100%");
     svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
     svg.style.overflow = "visible";
     
-    // Helper to calculate X/Y based on value and index
     const getCoordinates = (index, value) => {
       const angle = (index * 2 * Math.PI) / numPoints - Math.PI / 2;
       const r = (value / maxVal) * radius;
@@ -433,23 +519,22 @@ class OTAssessmentApp {
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       polygon.setAttribute("points", points.join(" "));
       polygon.setAttribute("fill", "none");
-      polygon.setAttribute("stroke", "rgba(0, 0, 0, 0.07)");
+      polygon.setAttribute("stroke", "rgba(0, 0, 0, 0.08)");
       polygon.setAttribute("stroke-width", "1");
       svg.appendChild(polygon);
       
-      // Add level label on first axis
       const firstCoord = getCoordinates(0, level);
       const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      labelText.setAttribute("x", firstCoord.x + 5);
+      labelText.setAttribute("x", firstCoord.x + 4);
       labelText.setAttribute("y", firstCoord.y + 3);
-      labelText.setAttribute("fill", "rgba(0, 0, 0, 0.35)");
-      labelText.setAttribute("font-size", "8px");
+      labelText.setAttribute("fill", "rgba(0, 0, 0, 0.4)");
+      labelText.setAttribute("font-size", "7px");
       labelText.setAttribute("font-family", "JetBrains Mono");
       labelText.textContent = `L${level}`;
       svg.appendChild(labelText);
     });
     
-    // Draw grid axes lines and labels
+    // Draw grid axes
     domainKeys.forEach((key, i) => {
       const outerCoord = getCoordinates(i, maxVal);
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -457,16 +542,14 @@ class OTAssessmentApp {
       line.setAttribute("y1", center);
       line.setAttribute("x2", outerCoord.x);
       line.setAttribute("y2", outerCoord.y);
-      line.setAttribute("stroke", "rgba(0, 0, 0, 0.05)");
+      line.setAttribute("stroke", "rgba(0, 0, 0, 0.06)");
       line.setAttribute("stroke-width", "1");
       svg.appendChild(line);
       
-      // Label text
-      const labelDistance = maxVal + 0.4;
+      const labelDistance = maxVal + 0.45;
       const textCoord = getCoordinates(i, labelDistance);
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       
-      // Anchor text properly based on position
       let textAnchor = "middle";
       if (textCoord.x > center + 10) textAnchor = "start";
       if (textCoord.x < center - 10) textAnchor = "end";
@@ -474,8 +557,8 @@ class OTAssessmentApp {
       text.setAttribute("x", textCoord.x);
       text.setAttribute("y", textCoord.y + 3);
       text.setAttribute("fill", DOMAINS[key].color);
-      text.setAttribute("font-size", "10px");
-      text.setAttribute("font-family", "Plus Jakarta Sans");
+      text.setAttribute("font-size", "9px");
+      text.setAttribute("font-family", "Inter");
       text.setAttribute("font-weight", "bold");
       text.setAttribute("text-anchor", textAnchor);
       text.textContent = key;
@@ -491,100 +574,147 @@ class OTAssessmentApp {
     
     const userPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     userPolygon.setAttribute("points", userPoints.join(" "));
-    userPolygon.setAttribute("fill", "rgba(58, 134, 255, 0.12)");
+    userPolygon.setAttribute("fill", "rgba(37, 99, 235, 0.08)");
     userPolygon.setAttribute("stroke", "var(--accent-cyan)");
-    userPolygon.setAttribute("stroke-width", "2.5");
+    userPolygon.setAttribute("stroke-width", "2");
     userPolygon.setAttribute("stroke-linejoin", "round");
     
-    // Add glowing filter to the line
-    userPolygon.style.filter = "drop-shadow(0 4px 10px rgba(58, 134, 255, 0.25))";
+    userPolygon.style.filter = "drop-shadow(0 2px 4px rgba(37, 99, 235, 0.15))";
     
     svg.appendChild(userPolygon);
     
-    // Draw dots on nodes
+    // Nodes dots
     domainKeys.forEach((key, i) => {
       const coord = getCoordinates(i, domainScores[key]);
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("cx", coord.x);
       circle.setAttribute("cy", coord.y);
-      circle.setAttribute("r", "4");
-      circle.setAttribute("fill", "var(--bg-main)");
+      circle.setAttribute("r", "3.5");
+      circle.setAttribute("fill", "#ffffff");
       circle.setAttribute("stroke", DOMAINS[key].color);
-      circle.setAttribute("stroke-width", "2");
+      circle.setAttribute("stroke-width", "1.5");
       svg.appendChild(circle);
     });
     
     this.elements.radarChartContainer.appendChild(svg);
   }
   
-  renderRoadmap() {
-    this.elements.roadmapList.innerHTML = "";
-    let itemsCount = 0;
+  /* =========================================================================
+     4. Gantt Timeline Remediation Scheduler
+     ========================================================================= */
+  renderPhasedTimeline(remediations) {
+    this.elements.timelineContainer.innerHTML = "";
     
-    QUESTIONS.forEach(question => {
-      const ansScore = this.answers[question.id] || 0;
+    // Define 4 phases
+    const phases = [
+      {
+        id: "P1",
+        title: "Phase 1: Perimeter Isolation & Ingress Containment",
+        time: "Months 1 - 2",
+        criteria: (task) => task.controlId === "C2" || task.controlId === "C3" || task.dimensionId === "T"
+      },
+      {
+        id: "P2",
+        title: "Phase 2: Segmented Architectures & Endpoint Hardening",
+        time: "Months 3 - 4",
+        criteria: (task) => task.controlId === "C1" || task.controlId === "C4" || task.dimensionId === "P"
+      },
+      {
+        id: "P3",
+        title: "Phase 3: Threat Ingestion, Monitoring & Incident Readiness",
+        time: "Months 5 - 6",
+        criteria: (task) => task.controlId === "C7" || task.controlId === "C8" || task.controlId === "C5"
+      },
+      {
+        id: "P4",
+        title: "Phase 4: Resilience Engineering & Compliance Verification",
+        time: "Months 7+",
+        criteria: (task) => task.controlId === "C9" || task.controlId === "C10" || task.controlId === "C6"
+      }
+    ];
+    
+    // Check if there are any topology violations and inject them as topmost critical tasks in Phase 1
+    const topologyViolations = this.evaluateTopology();
+    const topologyTasks = topologyViolations.map(v => ({
+      controlTitle: `Topology: ${v.zoneA.toUpperCase()}-${v.zoneB.toUpperCase()}`,
+      dimensionName: "Architecture",
+      action: v.message,
+      effort: "High",
+      cost: v.severity === "CRITICAL" ? "$$$" : "$$"
+    }));
+    
+    let totalTasksScheduled = 0;
+    
+    phases.forEach((phase, pIdx) => {
+      // Filter tasks matching this phase criteria
+      let phaseTasks = remediations.filter(task => phase.criteria(task));
       
-      // Determine what level recommendation to pull
-      const recommendation = question.recommendations[ansScore];
-      if (!recommendation) return;
-      
-      const priority = recommendation.priority.toLowerCase();
-      
-      // Filter mapping
-      if (this.activeFilter !== "all" && this.activeFilter !== priority) {
-        return;
+      // Inject topology tasks into Phase 1
+      if (pIdx === 0 && topologyTasks.length > 0) {
+        phaseTasks = [...topologyTasks, ...phaseTasks];
       }
       
-      itemsCount++;
+      if (phaseTasks.length === 0) return;
       
-      const card = document.createElement("div");
-      card.className = `roadmap-card priority-${priority} fade-in`;
+      totalTasksScheduled += phaseTasks.length;
       
-      card.innerHTML = `
-        <div class="roadmap-card-header">
-          <div class="roadmap-card-title">
-            <span class="priority-badge ${priority}">${recommendation.priority}</span>
-            <span>${question.text}</span>
-          </div>
-        </div>
-        <div class="roadmap-meta">
-          <div class="meta-item">Domain: <span>${DOMAINS[question.domain].title}</span></div>
-          <div class="meta-item">IEC 62443: <span>${question.standards.iec}</span></div>
-          <div class="meta-item">NERC CIP: <span>${question.standards.nerc}</span></div>
-          <div class="meta-item">Effort: <span>${recommendation.effort}</span></div>
-          <div class="meta-item">Est. Cost: <span>${recommendation.cost}</span></div>
-        </div>
-        <div class="roadmap-action">
-          <strong>Recommended Action:</strong> ${recommendation.action}
-        </div>
-        <div class="roadmap-rationale">
-          <strong>Risk Rationale:</strong> ${recommendation.rationale}
-        </div>
+      const phaseDiv = document.createElement("div");
+      phaseDiv.className = "timeline-phase fade-in";
+      
+      phaseDiv.innerHTML = `
+        <div class="phase-title">${phase.title}</div>
+        <div class="phase-time">${phase.time}</div>
+        <div class="phase-tasks"></div>
       `;
       
-      this.elements.roadmapList.appendChild(card);
+      const tasksContainer = phaseDiv.querySelector(".phase-tasks");
+      
+      phaseTasks.forEach(task => {
+        // Effort / Cost parameters
+        const effort = task.effort || (task.dimensionId === "T" || task.dimensionId === "A" ? "Medium" : "Low");
+        const cost = task.cost || (task.dimensionId === "T" ? "$$" : "$");
+        
+        const taskCard = document.createElement("div");
+        taskCard.className = "task-card";
+        
+        taskCard.innerHTML = `
+          <div class="task-details">
+            <div class="task-title">${task.controlTitle} (${task.dimensionName})</div>
+            <div class="task-action">${task.action}</div>
+          </div>
+          <div class="task-meta">
+            <span class="task-pill effort">Effort: ${effort}</span>
+            <span class="task-pill cost">Cost: ${cost}</span>
+          </div>
+        `;
+        
+        tasksContainer.appendChild(taskCard);
+      });
+      
+      this.elements.timelineContainer.appendChild(phaseDiv);
     });
     
-    if (itemsCount === 0) {
-      this.elements.roadmapList.innerHTML = `
-        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
-          No items found matching the selected priority filter.
+    if (totalTasksScheduled === 0) {
+      this.elements.timelineContainer.innerHTML = `
+        <div style="text-align: center; color: var(--accent-green); padding: 3rem; font-weight: 600;">
+          ✓ Fully Compliant. No remediation actions are required in the project roadmap.
         </div>
       `;
     }
   }
   
+  /* =========================================================================
+     5. JSON Export/Import & Lifecycle Utilities
+     ========================================================================= */
   exportStateToJSON() {
     const dataStr = JSON.stringify({
-      answers: this.answers,
-      isCompleted: this.isCompleted,
-      currentQuestionIndex: this.currentQuestionIndex,
+      topologyConnections: this.topologyConnections,
+      grades: this.grades,
       exportedAt: new Date().toISOString()
     }, null, 2);
     
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `ot-cyber-assessment-${new Date().toISOString().slice(0, 10)}.json`;
+    const exportFileDefaultName = `ot-advanced-audit-${new Date().toISOString().slice(0, 10)}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -601,20 +731,17 @@ class OTAssessmentApp {
       try {
         const state = JSON.parse(e.target.result);
         
-        if (state && state.answers) {
-          this.answers = state.answers;
-          this.isCompleted = state.isCompleted ?? true;
-          this.currentQuestionIndex = state.currentQuestionIndex ?? 0;
+        if (state && state.grades && state.topologyConnections) {
+          this.grades = state.grades;
+          this.topologyConnections = state.topologyConnections;
           this.saveState();
           
-          this.renderSidebar();
+          this.renderTopologyModeler();
+          this.renderMaturityMatrix();
+          this.evaluateTopology();
+          this.switchTab(this.activeTab);
           
-          if (this.isCompleted) {
-            this.showResults();
-          } else {
-            this.showQuestion(this.currentQuestionIndex);
-          }
-          alert("Assessment data imported successfully!");
+          alert("Audit configuration data imported successfully!");
         } else {
           alert("Invalid backup file structure.");
         }
@@ -624,38 +751,39 @@ class OTAssessmentApp {
     };
     reader.readAsText(file);
     
-    // Clear input
     this.elements.fileInput.value = "";
   }
   
-  editAnswers() {
-    this.isCompleted = false;
-    this.currentQuestionIndex = 0;
-    this.saveState();
-    this.showQuestion(this.currentQuestionIndex);
-    this.renderSidebar();
-  }
-  
   restartAssessment() {
-    if (confirm("Are you sure you want to clear your current progress and restart the assessment?")) {
-      this.answers = {};
-      this.isCompleted = false;
-      this.currentQuestionIndex = 0;
+    if (confirm("Are you sure you want to clear your current progress and restart the audit?")) {
+      CONTROLS.forEach(c => {
+        this.grades[c.id] = { P: 0, T: 0, L: 0, A: 0 };
+      });
+      
+      this.topologyConnections = {
+        "enterprise_safety": "none",
+        "enterprise_control": "direct",
+        "enterprise_operations": "permissive_firewall",
+        "operations_safety": "permissive_firewall",
+        "control_safety": "direct"
+      };
+      
+      this.activeTab = "topology";
       this.saveState();
-      this.showQuestion(this.currentQuestionIndex);
-      this.renderSidebar();
+      
+      this.renderTopologyModeler();
+      this.renderMaturityMatrix();
+      this.evaluateTopology();
+      this.switchTab(this.activeTab);
     }
   }
   
   handleLeadSubmit(e) {
     e.preventDefault();
     
-    // Get form data
     const name = document.getElementById("contact-name").value.trim();
     const company = document.getElementById("contact-company").value.trim();
     const email = document.getElementById("contact-email").value.trim();
-    const phone = document.getElementById("contact-phone").value.trim();
-    const message = document.getElementById("contact-message").value.trim();
     
     if (!name || !company || !email) {
       alert("Please fill in all required fields (Name, Company, Email).");
@@ -663,9 +791,8 @@ class OTAssessmentApp {
     }
     
     this.elements.formSubmitBtn.disabled = true;
-    this.elements.formSubmitBtn.innerText = "Transmitting secure request...";
+    this.elements.formSubmitBtn.innerText = "Transmitting secure audit profiles...";
     
-    // Simulating secure client-side qualification submission
     setTimeout(() => {
       this.elements.leadForm.style.display = "none";
       this.elements.submitSuccessAlert.style.display = "block";
@@ -676,5 +803,5 @@ class OTAssessmentApp {
 
 // Instantiate on load
 window.addEventListener("DOMContentLoaded", () => {
-  new OTAssessmentApp();
+  new AdvancedOTAssessmentApp();
 });
