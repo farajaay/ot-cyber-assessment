@@ -40,6 +40,7 @@ class AdvancedOTAssessmentApp {
       pctIec: document.getElementById("pct-iec"),
       pctNerc: document.getElementById("pct-nerc"),
       pctNca: document.getElementById("pct-nca"),
+      pctHcis: document.getElementById("pct-hcis"),
       radarChartContainer: document.getElementById("radar-chart-container"),
       domainBarsContainer: document.getElementById("domain-bars-container"),
       timelineContainer: document.getElementById("timeline-container"),
@@ -380,6 +381,7 @@ class AdvancedOTAssessmentApp {
     });
     
     // Standard-specific weighted index algorithms
+    // @ts-ignore
     // IEC 62443: Weighted focus across all operational levels
     const pPct = (dimensionTotals.P / (dimensionCounts.P * 3));
     const tPct = (dimensionTotals.T / (dimensionCounts.T * 3));
@@ -391,6 +393,23 @@ class AdvancedOTAssessmentApp {
     const nercScore = Math.round((tPct * 0.70 + aPct * 0.30) * 100);
     // NCA ECC: Governance and audit verification focus (40% policy, 20% training, 40% audit)
     const ncaScore = Math.round((pPct * 0.40 + lPct * 0.20 + aPct * 0.40) * 100);
+
+    // HCIS SEC-10 Compliance: Weighted heavily on perimeter safety and core operational resilience controls
+    const getControlAvg = (cId) => {
+      const grades = this.grades[cId];
+      return (grades.P + grades.T + grades.L + grades.A) / 12.0; // 4 dimensions * max 3 = 12
+    };
+    const c1 = getControlAvg("C1");
+    const c2 = getControlAvg("C2");
+    const c3 = getControlAvg("C3");
+    const c4 = getControlAvg("C4");
+    const c5 = getControlAvg("C5");
+    const c6 = getControlAvg("C6");
+    const c7 = getControlAvg("C7");
+    const c8 = getControlAvg("C8");
+    const c9 = getControlAvg("C9");
+    const c10 = getControlAvg("C10");
+    const hcisScore = Math.round(((c1 * 0.20) + (c2 * 0.20) + (c4 * 0.15) + (c7 * 0.15) + (c9 * 0.15) + ((c3 + c5 + c6 + c8 + c10) / 5 * 0.15)) * 100);
     
     return {
       overallScore: Number(overallScore.toFixed(2)),
@@ -398,7 +417,8 @@ class AdvancedOTAssessmentApp {
       standardsPct: {
         iec: Math.min(100, Math.max(0, iecScore)),
         nerc: Math.min(100, Math.max(0, nercScore)),
-        nca: Math.min(100, Math.max(0, ncaScore))
+        nca: Math.min(100, Math.max(0, ncaScore)),
+        hcis: Math.min(100, Math.max(0, hcisScore))
       },
       remediations: remediationsList
     };
@@ -428,6 +448,7 @@ class AdvancedOTAssessmentApp {
     this.elements.pctIec.innerText = `${standards.iec}%`;
     this.elements.pctNerc.innerText = `${standards.nerc}%`;
     this.elements.pctNca.innerText = `${standards.nca}%`;
+    this.elements.pctHcis.innerText = `${standards.hcis}%`;
   }
   
   renderTopologyBreaches() {

@@ -1,5 +1,5 @@
 // Advanced OT/ICS Cybersecurity Audit Definitions
-// Conforming to IEC 62443, NERC CIP, and Saudi NCA guidelines.
+// Conforming to IEC 62443, NERC CIP, Saudi NCA (ECC-1:2018 / CSCC-1:2019), and HCIS SEC-10 directives.
 
 export const DOMAINS = {
   NS: {
@@ -48,7 +48,12 @@ export const CONTROLS = [
     domain: "NS",
     title: "Boundary Protection & IDMZ Staging",
     description: "Deployment of stateful firewall perimeters separating the Enterprise network from control segments, utilizing an Industrial DMZ (IDMZ) to terminate direct connections.",
-    standards: { iec: "IEC 62443-3-3 (SR 5.2)", nerc: "NERC CIP-005 (ESP)", nca: "NCA ECC-2-4-2" },
+    standards: { 
+      iec: "IEC 62443-3-3 (SR 5.2)", 
+      nerc: "NERC CIP-005 (ESP)", 
+      nca: "NCA ECC-2-4-2 (Network Security)",
+      hcis: "HCIS SEC-10 Sec 4.2.1 (Boundary Security)"
+    },
     remediations: {
       P: "Draft and approve a dedicated Boundary Protection and Network Security Governance Policy.",
       T: "Deploy a hardened boundary firewall separating IT and OT, routing all cross-zone traffic through intermediate store-and-forward proxies inside a dedicated IDMZ segment.",
@@ -61,7 +66,12 @@ export const CONTROLS = [
     domain: "NS",
     title: "Transient Remote Access Security",
     description: "Governance, authentication, and logging of external vendor and internal engineering remote sessions traversing critical system segments.",
-    standards: { iec: "IEC 62443-3-3 (SR 1.1/1.2)", nerc: "NERC CIP-005-5 (R2)", nca: "NCA ECC-2-4-3" },
+    standards: { 
+      iec: "IEC 62443-3-3 (SR 1.1/1.2)", 
+      nerc: "NERC CIP-005-5 (R2)", 
+      nca: "NCA ECC-2-4-3 (Remote Access)",
+      hcis: "HCIS SEC-10 Sec 4.2.4 (Remote Connections)"
+    },
     remediations: {
       P: "Implement a Remote Access Authorization and Permitting Policy detailing workflow sign-offs.",
       T: "Deploy a Multi-Factor Authentication (MFA) VPN landing on a Jump Host within the IDMZ, configured with command blocklists and full session recording.",
@@ -75,7 +85,12 @@ export const CONTROLS = [
     domain: "AC",
     title: "Identity Governance & Privilege Control",
     description: "Management of HMI, server, and engineering workstation accounts, restricting elevated privileges according to the principle of least privilege.",
-    standards: { iec: "IEC 62443-4-2 (EDR 1.1/1.2)", nerc: "NERC CIP-007-6 (R5)", nca: "NCA ECC-2-3" },
+    standards: { 
+      iec: "IEC 62443-4-2 (EDR 1.1/1.2)", 
+      nerc: "NERC CIP-007-6 (R5)", 
+      nca: "NCA ECC-2-3 (Access Management)",
+      hcis: "HCIS SEC-10 Sec 4.3.1 (Access Controls)"
+    },
     remediations: {
       P: "Establish an IACS Account Provisioning Policy defining corporate identity validation and role profiles.",
       T: "Decommission shared accounts on all workstations, integrate assets with an offline OT Active Directory, and deploy a Privileged Access Management (PAM) vault.",
@@ -88,7 +103,12 @@ export const CONTROLS = [
     domain: "AC",
     title: "Endpoint Hardening & Media Restriction",
     description: "Disabling unnecessary services and ports on Windows/Linux nodes, coupled with strict authorization of USB storage media.",
-    standards: { iec: "IEC 62443-4-2 (EDR 2.1/2.3)", nerc: "NERC CIP-010-3 (R4)", nca: "NCA ECC-2-3-2" },
+    standards: { 
+      iec: "IEC 62443-4-2 (EDR 2.1/2.3)", 
+      nerc: "NERC CIP-010-3 (R4)", 
+      nca: "NCA ECC-2-3-2 (Endpoint Hardening)",
+      hcis: "HCIS SEC-10 Sec 4.3.3 (Host Hardening)"
+    },
     remediations: {
       P: "Establish a standardized IACS Endpoint Hardening Checklist and a Portable Media Policy.",
       T: "Block USB mass storage interfaces via Active Directory GPOs, deploy an isolated scanning kiosk for file ingress, and implement application whitelisting.",
@@ -102,7 +122,12 @@ export const CONTROLS = [
     domain: "AV",
     title: "Asset Inventory & Lifecycle Management",
     description: "Maintaining an accurate registry of physical, logical, and software assets deployed inside the IACS network.",
-    standards: { iec: "IEC 62443-2-1", nerc: "NERC CIP-002-5.1", nca: "NCA ECC-2-2-2" },
+    standards: { 
+      iec: "IEC 62443-2-1", 
+      nerc: "NERC CIP-002-5.1", 
+      nca: "NCA ECC-2-2-2 (Asset Inventory)",
+      hcis: "HCIS SEC-10 Sec 4.1.2 (Asset Registry)"
+    },
     remediations: {
       P: "Approve an Asset Management and Lifecycle Governance Procedure, assigning owners to critical systems.",
       T: "Deploy a passive OT asset discovery utility (e.g. Grassmarlin, Claroty) to map active components and capture MAC/IP profiles.",
@@ -115,7 +140,12 @@ export const CONTROLS = [
     domain: "AV",
     title: "Patch & Vulnerability Lifecycle Management",
     description: "Evaluating software/firmware alerts, testing vendor-approved updates, and implementing compensating controls (virtual patching).",
-    standards: { iec: "IEC 62443-2-4 (SP 03.01)", nerc: "NERC CIP-007-6 (R1/R2)", nca: "NCA ECC-2-12" },
+    standards: { 
+      iec: "IEC 62443-2-4 (SP 03.01)", 
+      nerc: "NERC CIP-007-6 (R1/R2)", 
+      nca: "NCA ECC-2-12 (Patch Management)",
+      hcis: "HCIS SEC-10 Sec 4.5.3 (Software Updates)"
+    },
     remediations: {
       P: "Draft an IACS-specific Vulnerability Staging and Patching Policy, defining target patching timelines based on CVSS scores.",
       T: "Configure an offline WSUS server for HMI patching, build a dedicated staging test rig, and apply IPS virtual patching for legacy controllers.",
@@ -129,7 +159,12 @@ export const CONTROLS = [
     domain: "TR",
     title: "Event Log Management & SOC Integration",
     description: "Centralized streaming of security logs from firewalls, switches, and workstations, with active alerting for anomalous events.",
-    standards: { iec: "IEC 62443-3-3 (SR 6.1)", nerc: "NERC CIP-007-6 (R3)", nca: "NCA ECC-2-8" },
+    standards: { 
+      iec: "IEC 62443-3-3 (SR 6.1)", 
+      nerc: "NERC CIP-007-6 (R3)", 
+      nca: "NCA ECC-2-8 (Event Logs)",
+      hcis: "HCIS SEC-10 Sec 4.6.1 (Event Logs)"
+    },
     remediations: {
       P: "Develop an Event Logging and Security Incident Governance Framework.",
       T: "Deploy a centralized Syslog collector inside the OT network, write logic filters to capture administrative anomalies, and integrate feeds with an OT-specific SIEM.",
@@ -142,7 +177,12 @@ export const CONTROLS = [
     domain: "TR",
     title: "Incident Response Playbooks & Testing",
     description: "Formulating emergency procedures for OT-specific scenarios (e.g., controller overrides, ransomware) and performing periodic validation exercises.",
-    standards: { iec: "IEC 62443-2-4", nerc: "NERC CIP-008-6", nca: "NCA ECC-2-16" },
+    standards: { 
+      iec: "IEC 62443-2-4", 
+      nerc: "NERC CIP-008-6", 
+      nca: "NCA ECC-2-16 (Incident Response)",
+      hcis: "HCIS SEC-10 Sec 4.7.2 (Response Procedures)"
+    },
     remediations: {
       P: "Develop IACS incident playbooks detailing physical containment steps that prioritize process safety over network isolation.",
       T: "Deploy local backup terminals, isolated control loops, and direct safety switches for emergency containment.",
@@ -156,7 +196,12 @@ export const CONTROLS = [
     domain: "DR",
     title: "Immutable Backup Architecture",
     description: "Maintaining secure, version-controlled copies of HMI operating system drives, SCADA databases, network configs, and PLC program binaries.",
-    standards: { iec: "IEC 62443-2-4 (SP 09.01)", nerc: "NERC CIP-009-6 (R1)", nca: "NCA ECC-2-9" },
+    standards: { 
+      iec: "IEC 62443-2-4 (SP 09.01)", 
+      nerc: "NERC CIP-009-6 (R1)", 
+      nca: "NCA ECC-2-9 (Backup & Recovery)",
+      hcis: "HCIS SEC-10 Sec 4.8.1 (Backup Retention)"
+    },
     remediations: {
       P: "Approve a Disaster Recovery and Backup Policy, establishing strict Recovery Time (RTO) and Recovery Point (RPO) targets.",
       T: "Configure automated scheduled backups stored on an isolated backup server, rotating an offline air-gapped backup copy weekly.",
@@ -169,7 +214,12 @@ export const CONTROLS = [
     domain: "DR",
     title: "Bare-Metal Restoration Testing",
     description: "Validating that backup archives can successfully rebuild operational configurations in the event of hardware destruction.",
-    standards: { iec: "IEC 62443-2-4 (SP 09.04)", nerc: "NERC CIP-009-6 (R2)", nca: "NCA ECC-2-9-2" },
+    standards: { 
+      iec: "IEC 62443-2-4 (SP 09.04)", 
+      nerc: "NERC CIP-009-6 (R2)", 
+      nca: "NCA ECC-2-9-2 (Disaster Recovery)",
+      hcis: "HCIS SEC-10 Sec 4.8.3 (Restoration Validation)"
+    },
     remediations: {
       P: "Incorporate formal recovery validation criteria into the Business Continuity Plan.",
       T: "Maintain a dedicated offline test rig with spare PLCs, HMIs, and switches to run full-scope bare-metal recovery tests.",
@@ -203,8 +253,8 @@ export const TOPOLOGY_RULES = [
     zoneB: "safety",
     forbidden: ["direct", "permissive_firewall", "secure_firewall"],
     severity: "CRITICAL",
-    message: "Critical Boundary Bypass: Safety Instrumented Systems (SIS / Level 0) must remain strictly air-gapped from the corporate Enterprise segment.",
-    standard: "IEC 62443-3-3 (SR 5.2) / NERC CIP-005"
+    message: "Critical Boundary Bypass: Safety Instrumented Systems (SIS / Level 0) must remain strictly air-gapped from the corporate Enterprise segment. Violation of HCIS SEC-10 Section 4.2.1.",
+    standard: "IEC 62443-3-3 (SR 5.2) / NERC CIP-005 / HCIS SEC-10"
   },
   {
     id: "TR2",
@@ -212,8 +262,8 @@ export const TOPOLOGY_RULES = [
     zoneB: "control",
     forbidden: ["direct", "permissive_firewall"],
     severity: "CRITICAL",
-    message: "Insecure Controller Exposure: The corporate Enterprise network has direct or poorly-filtered routing to Process Control Zones (Level 1/2 PLCs), bypassing boundary safeguards.",
-    standard: "IEC 62443-3-3 (SR 5.2) / NERC CIP-005"
+    message: "Insecure Controller Exposure: The corporate Enterprise network has direct or poorly-filtered routing to Process Control Zones (Level 1/2 PLCs), bypassing boundary safeguards. Violation of HCIS SEC-10 Section 4.2.2.",
+    standard: "IEC 62443-3-3 (SR 5.2) / NERC CIP-005 / HCIS SEC-10"
   },
   {
     id: "TR3",
@@ -221,8 +271,8 @@ export const TOPOLOGY_RULES = [
     zoneB: "operations",
     forbidden: ["direct", "permissive_firewall"],
     severity: "HIGH",
-    message: "Missing IDMZ Staging: Enterprise assets communicate directly with Operations (Level 3 SCADA) without intermediate database replication or proxy gateways in the Industrial DMZ.",
-    standard: "IEC 62443-3-3 (SR 5.1)"
+    message: "Missing IDMZ Staging: Enterprise assets communicate directly with Operations (Level 3 SCADA) without intermediate database replication or proxy gateways in the Industrial DMZ. Violation of HCIS SEC-10 Section 4.2.1.",
+    standard: "IEC 62443-3-3 (SR 5.1) / HCIS SEC-10"
   },
   {
     id: "TR4",
@@ -230,8 +280,8 @@ export const TOPOLOGY_RULES = [
     zoneB: "safety",
     forbidden: ["direct", "permissive_firewall"],
     severity: "CRITICAL",
-    message: "Unprotected Safety Boundary: Safety Instrumented Systems (SIS / Level 0) are connected to Level 3 Operations using direct or permissive controls. Compromise of SCADA servers will impact safety shutoff loops.",
-    standard: "IEC 62443-3-3 (SR 5.2)"
+    message: "Unprotected Safety Boundary: Safety Instrumented Systems (SIS / Level 0) are connected to Level 3 Operations using direct or permissive controls. Compromise of SCADA servers will impact safety shutoff loops. Violation of HCIS SEC-10 Section 4.2.3.",
+    standard: "IEC 62443-3-3 (SR 5.2) / HCIS SEC-10"
   },
   {
     id: "TR5",
@@ -240,6 +290,6 @@ export const TOPOLOGY_RULES = [
     forbidden: ["direct"],
     severity: "HIGH",
     message: "Direct Control-to-SIS Routing: Level 1/2 Controllers bridge directly to Level 0 Safety Instrumented Systems. Traffic should transit via a security firewall to isolate safety loops.",
-    standard: "IEC 62443-3-3 (SR 5.2)"
+    standard: "IEC 62443-3-3 (SR 5.2) / HCIS SEC-10"
   }
 ];

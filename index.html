@@ -132,7 +132,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h1 class="dashboard-title">Industrial Cybersecurity Maturity Report</h1>
-            <p class="dashboard-subtitle">Benchmark analysis mapped to IEC 62443, NERC CIP, and NCA guidelines.</p>
+            <p class="dashboard-subtitle">Benchmark analysis mapped to IEC 62443, NERC CIP, NCA, and HCIS guidelines.</p>
           </div>
           <button class="btn btn-primary" id="btn-print-pdf" style="padding: 0.65rem 1.5rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -176,9 +176,13 @@
                   <span class="stat-label">NERC CIP Compliance</span>
                   <span class="stat-val green" id="pct-nerc">0%</span>
                 </div>
-                <div class="stat-row" style="border: none;">
+                <div class="stat-row">
                   <span class="stat-label">NCA ECC Compliance</span>
                   <span class="stat-val cyan" id="pct-nca">0%</span>
+                </div>
+                <div class="stat-row" style="border: none;">
+                  <span class="stat-label">HCIS SEC-10 Compliance</span>
+                  <span class="stat-val green" id="pct-hcis">0%</span>
                 </div>
               </div>
             </div>
@@ -286,6 +290,7 @@
         <a href="https://www.isa.org/standards-and-publications/isa-standards/isa-standards-committees/isa99" target="_blank" rel="noopener">IEC 62443</a>
         <a href="https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx" target="_blank" rel="noopener">NERC CIP</a>
         <a href="https://nca.gov.sa" target="_blank" rel="noopener">Saudi NCA</a>
+        <a href="https://www.moi.gov.sa" target="_blank" rel="noopener">Saudi HCIS</a>
       </div>
     </div>
   </footer>
