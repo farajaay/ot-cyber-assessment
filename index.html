@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OT/ICS Cybersecurity Assessment Platform</title>
+  <meta name="description" content="Structured OT/ICS Cybersecurity self-assessment benchmarking maturity against IEC 62443, NERC CIP, and GCC NCA guidelines. Local-first privacy control.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Security Banner explaining local-first architecture -->
+  <div class="security-banner" id="privacy-banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    <span><strong>100% Client-Side Privacy:</strong> No sensitive network architecture or topology details are sent to servers. Calculations are performed locally.</span>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span>OT-CYBERGUARD</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="btn-import-json">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Import JSON
+        </button>
+        <button class="btn btn-secondary" id="btn-export-json">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export JSON
+        </button>
+        <input type="file" id="file-input" style="display: none;" accept=".json">
+      </div>
+    </div>
+  </header>
+
+  <!-- Application Shell -->
+  <main class="app-container">
+    
+    <!-- Sidebar Controls -->
+    <aside class="sidebar">
+      <div class="card card-glow-cyan">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Assessment Progress
+        </h3>
+        <ul class="progress-list" id="progress-sidebar">
+          <!-- Dynamically populated steps -->
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="15" y2="17"></line></svg>
+          Benchmarks Mapped
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; line-height: 1.4;">
+          Our framework is structured directly around globally recognized industrial standards:
+        </p>
+        <ul style="font-size: 0.8rem; color: var(--accent-cyan); padding-left: 1.25rem; line-height: 1.5;">
+          <li>IEC 62443 (ICS Security Lifecycle)</li>
+          <li>NERC CIP (Critical Infrastructure)</li>
+          <li>Saudi NCA ECC-1:2018 / CSCC-1:2019</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Content Workspace -->
+    <section class="main-workspace">
+      
+      <!-- QUESTION WORKSPACE (Visible during test) -->
+      <div id="question-container" class="card fade-in" style="min-height: 480px;">
+        <div class="domain-header">
+          <div>
+            <span class="domain-badge" id="domain-badge">NS</span>
+            <h2 class="domain-title-text" id="domain-title">Network Segmentation</h2>
+          </div>
+          <div class="question-meta" id="question-meta">
+            <!-- Standards mappings go here -->
+          </div>
+        </div>
+        
+        <div class="question-text" id="question-text">
+          Loading assessment question...
+        </div>
+        
+        <div class="choices-list" id="choices-list">
+          <!-- Dynamically populated choice cards -->
+        </div>
+        
+        <div class="nav-buttons">
+          <button class="btn btn-secondary" id="btn-prev" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Previous
+          </button>
+          
+          <button class="btn btn-primary" id="btn-next">
+            Next Question
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          
+          <button class="btn btn-success" id="btn-finish" style="display: none;">
+            Calculate Gap Report
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- RESULTS DASHBOARD WORKSPACE (Visible when finished) -->
+      <div id="results-container" style="display: none;">
+        
+        <div class="card card-glow-green" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+            <div>
+              <h1 class="dashboard-title">Industrial Security Gap Report</h1>
+              <p class="dashboard-subtitle">Cybersecurity self-assessment posture report for critical systems.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <button class="btn btn-secondary" id="btn-edit-answers">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Edit Responses
+              </button>
+              <button class="btn btn-primary" id="btn-print-pdf">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Export PDF Report
+              </button>
+            </div>
+          </div>
+          
+          <div class="dashboard-grid">
+            <!-- 1. Maturity Radial Score Gauge -->
+            <div class="card" style="background: rgba(255,255,255,0.01);">
+              <h3 style="font-size: 0.95rem; margin-bottom: 1rem; color: var(--accent-cyan);">Overall Maturity Score</h3>
+              <div class="score-overview">
+                <div class="radial-score-container">
+                  <svg class="radial-score-svg">
+                    <defs>
+                      <linearGradient id="cyan-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--accent-cyan)" />
+                        <stop offset="100%" stop-color="var(--accent-green)" />
+                      </linearGradient>
+                    </defs>
+                    <circle class="radial-bg" cx="80" cy="80" r="70"></circle>
+                    <circle class="radial-progress" id="radial-progress" cx="80" cy="80" r="70"></circle>
+                  </svg>
+                  <div class="radial-label">
+                    <div class="radial-number" id="overall-maturity-number">0.0</div>
+                    <div class="radial-sub">Index</div>
+                  </div>
+                </div>
+                
+                <div class="score-stats">
+                  <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);" id="overall-maturity-text">
+                    Ad-hoc (Level 1)
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">IEC 62443 Alignment</span>
+                    <span class="stat-val cyan" id="pct-iec">0%</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">NERC CIP Compliance</span>
+                    <span class="stat-val green" id="pct-nerc">0%</span>
+                  </div>
+                  <div class="stat-row" style="border: none;">
+                    <span class="stat-label">NCA ECC Alignment</span>
+                    <span class="stat-val cyan" id="pct-nca">0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 2. Domain Polar Radar Chart -->
+            <div class="card" style="background: rgba(255,255,255,0.01);">
+              <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent-green);">Domain Maturity Vectors</h3>
+              <div class="chart-container" id="radar-chart-container">
+                <!-- Custom SVG spider chart loaded here -->
+              </div>
+            </div>
+            
+            <!-- 3. Horizontal Domain Bars (Full Width) -->
+            <div class="card full-width" style="background: rgba(255,255,255,0.01);">
+              <h3 style="font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-primary);">Domain Metrics Breakdown</h3>
+              <div class="domain-bars" id="domain-bars-container">
+                <!-- Rendered Domain Bars -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remediation Roadmap Section -->
+        <div class="card roadmap-section">
+          <div class="roadmap-header">
+            <div>
+              <h3 style="text-transform: none; font-size: 1.25rem; letter-spacing: 0;">Remediation Roadmap & Recommendations</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Action items listed in order of priority based on your assessment gaps.</p>
+            </div>
+            
+            <div class="filters-group">
+              <button class="filter-btn active" data-priority="all">All</button>
+              <button class="filter-btn" data-priority="critical">Critical</button>
+              <button class="filter-btn" data-priority="high">High</button>
+              <button class="filter-btn" data-priority="medium">Medium</button>
+              <button class="filter-btn" data-priority="low">Low</button>
+            </div>
+          </div>
+          
+          <div class="roadmap-list" id="roadmap-list">
+            <!-- Populated recommendation cards -->
+          </div>
+        </div>
+
+        <!-- GCC Advisory Contact Qualification -->
+        <div class="advisor-cta">
+          <div class="advisor-cta-content">
+            <h2>Verify Your Posture with Certified Experts</h2>
+            <p>
+              Self-assessments are the first step. To pursue formal compliance certification (such as Saudi NCA ECC/CSCC audits or Aramco SACS-002 validations), submit your contact details below. A GCC-based OT security engineer will review your gap report and schedule a 30-minute consultation.
+            </p>
+            
+            <div class="submit-success" id="submit-success-alert">
+              <strong>Secure Request Received.</strong> An OT security specialist is reviewing your maturity profile. We will contact you via your corporate email within 24 hours.
+            </div>
+            
+            <form class="cta-form" id="lead-form">
+              <div class="form-group">
+                <label class="form-label" for="contact-name">Full Name *</label>
+                <input class="form-input" type="text" id="contact-name" placeholder="Engineer/Manager Name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="contact-company">Company Name *</label>
+                <input class="form-input" type="text" id="contact-company" placeholder="e.g. Petrochemical / Utility Plant" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="contact-email">Corporate Email *</label>
+                <input class="form-input" type="email" id="contact-email" placeholder="name@company.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="contact-phone">Phone Number</label>
+                <input class="form-input" type="tel" id="contact-phone" placeholder="e.g. +966 50 000 0000">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label" for="contact-message">Process Scope / Remarks</label>
+                <input class="form-input" type="text" id="contact-message" placeholder="e.g., Evaluating Yanbu refining terminal, mapping to NCA CSCC.">
+              </div>
+              <button class="btn btn-success cta-submit-btn" type="submit" id="form-submit-btn">
+                Request Professional Validation & Review
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+            </form>
+          </div>
+        </div>
+        
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+          <button class="btn btn-secondary" id="btn-restart">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+            Restart Assessment
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div>
+        © 2026 OT-CyberGuard Platform. All rights reserved. Locally processed.
+      </div>
+      <div class="footer-links">
+        <a href="#privacy-banner">Privacy Statement</a>
+        <a href="https://www.isa.org/standards-and-publications/isa-standards/isa-standards-committees/isa99" target="_blank" rel="noopener">IEC 62443 Committee</a>
+        <a href="https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx" target="_blank" rel="noopener">NERC CIP Guidelines</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
