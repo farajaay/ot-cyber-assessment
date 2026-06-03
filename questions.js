@@ -5,31 +5,31 @@ export const DOMAINS = {
     id: "NS",
     title: "Network Segmentation & Perimeter Security",
     description: "Protection of industrial networks from unauthorized access and separation of logical zones.",
-    color: "#00F2FE"
+    color: "#2563eb"
   },
   AC: {
     id: "AC",
     title: "Access Control & Identity Management",
     description: "Authentication, authorization, and management of user and system privileges in the OT environment.",
-    color: "#00F5A0"
+    color: "#059669"
   },
   AV: {
     id: "AV",
     title: "Asset Governance & Vulnerabilities",
     description: "Tracking assets, hardware/software lifecycles, and managing software security updates.",
-    color: "#FFD200"
+    color: "#d97706"
   },
   TR: {
     id: "TR",
     title: "Threat Monitoring & Incident Response",
     description: "Real-time visibility, security logging, anomaly detection, and operational recovery readiness.",
-    color: "#FF5E62"
+    color: "#dc2626"
   },
   DR: {
     id: "DR",
     title: "Business Continuity & Disaster Recovery",
     description: "Physical environment protection, power redundancy, backups, and bare-metal restoration capabilities.",
-    color: "#A259FF"
+    color: "#7c3aed"
   }
 };
 
@@ -38,7 +38,7 @@ export const QUESTIONS = [
   {
     id: "Q1",
     domain: "NS",
-    text: "How is your industrial network segmented from your corporate (IT) network?",
+    text: "What is the implementation status of logical and physical network segmentation between the corporate Enterprise network and the IACS (Industrial Automation and Control Systems) zones?",
     standards: {
       iec: "IEC 62443-3-3 (SR 5.2)",
       nerc: "NERC CIP-005 (ESP)",
@@ -47,22 +47,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Flat network: OT devices are directly connected to the IT network with no firewalls or segregation.",
+        text: "Unrestricted Layer 2/3 connectivity: Corporate Enterprise assets and critical IACS controllers reside on a shared, flat broadcast domain with no firewall boundaries.",
         score: 0
       },
       {
         level: 1,
-        text: "Basic isolation: A single shared firewall is in place, but rule configurations are permissive or unmanaged.",
+        text: "Rudimentary perimeter isolation: A shared perimeter firewall separates IT/OT segments, but rule configurations are overly permissive, allowing direct routing without deep packet inspection or active session monitoring.",
         score: 1
       },
       {
         level: 2,
-        text: "Segmented Architecture: Dedicated enterprise firewalls segregate IT and OT. Traffic is strictly controlled by port/IP restrictions.",
+        text: "Dedicated boundary firewalls are deployed at the IT/OT perimeter. Access control lists (ACLs) are configured on a strict 'least privilege' model, restricting traversal to essential protocols with stateful traffic inspection.",
         score: 2
       },
       {
         level: 3,
-        text: "Micro-segmentation: Internal OT networks are segmented into functional Zones & Conduits based on criticality, with active traffic inspection.",
+        text: "Defense-in-Depth Zoning: Micro-segmentation is implemented within the OT network. Controllers, safety instrumented systems (SIS), and operator workstations are segmented into discrete Zones and Conduits conforming to the IEC 62443-3-3 zoning model.",
         score: 3
       }
     ],
@@ -100,7 +100,7 @@ export const QUESTIONS = [
   {
     id: "Q2",
     domain: "NS",
-    text: "Is there a functional Industrial DMZ (IDMZ) deployed between the IT and OT networks?",
+    text: "How is logical traffic isolation and intermediate data transit governed between the Enterprise and IACS zones?",
     standards: {
       iec: "IEC 62443-3-3 (SR 5.1 / 5.2)",
       nerc: "NERC CIP-005-5 (R1)",
@@ -109,22 +109,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No IDMZ: Servers (like historians or license managers) span both IT and OT networks directly.",
+        text: "No intermediate transit zone: Distributed databases, historians, and license servers bridge both networks via multi-homed NIC configurations without logical isolation.",
         score: 0
       },
       {
         level: 1,
-        text: "Dual-homed systems: Shared servers have dual network cards, one connected to IT and one to OT, without a DMZ.",
+        text: "Shared boundary zone: A Demilitarized Zone (DMZ) is established, but servers within it directly query both IT and OT assets without intermediate staging, replica brokers, or application proxies.",
         score: 1
       },
       {
         level: 2,
-        text: "Structured IDMZ: A dedicated DMZ exists. Data transfer occurs via intermediate servers (proxies, replica databases) located in the IDMZ.",
+        text: "Structured Industrial DMZ (IDMZ): An isolated IDMZ is active. Direct traffic routing is prohibited; all data exchanges (e.g. historical data, patches) traverse staging replicas, proxies, or application gateways.",
         score: 2
       },
       {
         level: 3,
-        text: "Hardened IDMZ: Full DMZ architecture with strictly inspected data unidirectional replication (e.g., data diodes or secure proxies).",
+        text: "Hardened IDMZ with Unidirectional Gateways: Full compliance with IEC 62443-3-3 boundary protections. Traffic is filtered using stateful proxies, reverse proxies, and unidirectionally replicated databases (e.g. data diodes) to block return-channel vulnerabilities.",
         score: 3
       }
     ],
@@ -162,7 +162,7 @@ export const QUESTIONS = [
   {
     id: "Q3",
     domain: "NS",
-    text: "How is vendor/staff remote engineering access to the OT network secured?",
+    text: "What authorization controls and auditing protocols govern transient vendor or internal engineering remote access into IACS networks?",
     standards: {
       iec: "IEC 62443-3-3 (SR 1.1 / 1.2)",
       nerc: "NERC CIP-005-5 (R2)",
@@ -171,22 +171,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Unrestricted: Vendors use consumer tools (e.g., TeamViewer, AnyDesk) that bypass corporate firewalls.",
+        text: "Unmanaged remote ingress: Remote desktop utilities (e.g., TeamViewer, AnyDesk, Chrome Remote Desktop) are installed on IACS hosts, bypassing perimeter firewalls with static credentials.",
         score: 0
       },
       {
         level: 1,
-        text: "Basic VPN: Users connect via a VPN directly into the OT network, authenticated by password only.",
+        text: "Standard VPN access: Remote access is routed via a boundary Virtual Private Network (VPN) using single-factor static credentials, granting direct access to the general OT subnet.",
         score: 1
       },
       {
         level: 2,
-        text: "Secure Gateways: Access requires Multi-Factor Authentication (MFA) via a VPN, landing on a jump host inside the IDMZ.",
+        text: "Secure Multi-Factor Ingress: Ingress requires Multi-Factor Authentication (MFA) via a secure VPN, terminating on a hardened Jump Host inside the IDMZ with separate session validation.",
         score: 2
       },
       {
         level: 3,
-        text: "Managed & Audited: MFA jump host access with on-demand (just-in-time) approval workflows, session recording, and automatic termination.",
+        text: "Role-Based Just-in-Time (JIT) PAM Ingress: Remote access is disabled by default, activated only via temporary Permit-to-Work approvals. Connections require MFA, run via an isolated Jump Host, enforce command blocklists, and record full video sessions for forensic audit.",
         score: 3
       }
     ],
@@ -226,7 +226,7 @@ export const QUESTIONS = [
   {
     id: "Q4",
     domain: "AC",
-    text: "How are credentials managed for HMIs, PLCs, and servers in the OT network?",
+    text: "How is authentication, authorization, and administrative credential management governed across IACS assets (HMIs, PLCs, network infrastructure)?",
     standards: {
       iec: "IEC 62443-4-2 (EDR 1.1 / 1.2)",
       nerc: "NERC CIP-007-6 (R5)",
@@ -235,22 +235,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Shared defaults: Factory default credentials are used, or shared passwords (e.g. 'operator123') are written on monitors/desks.",
+        text: "Shared defaults / Static credentials: Factory default credentials are left active on active network equipment/PLCs, or shared static passwords are utilized across operators.",
         score: 0
       },
       {
         level: 1,
-        text: "Unique but static: Standard devices have customized passwords, but they are identical across the plant and changed rarely.",
+        text: "Unique but unmanaged credentials: Individual assets have custom credentials, but passwords are changed infrequently and are shared between operations teams with no enforcement of complexity rules.",
         score: 1
       },
       {
         level: 2,
-        text: "Individual Accounts: Staff have unique personal logins for major OT applications, with standard complexity policies enforced.",
+        text: "Role-Based Local Credentials: Staff authenticate using unique, individual local accounts. Access permissions conform to standardized roles, and password complexity/rotation rules are actively enforced.",
         score: 2
       },
       {
         level: 3,
-        text: "Centralized Identity (RBAC): Centralized authentication (e.g., OT Active Directory) with Role-Based Access Control and automated password vaulting.",
+        text: "Centralized Enterprise Identity Integration: Authentication is managed via a centralized directory (e.g., OT Active Directory) with Role-Based Access Control (RBAC), multi-factor policies, and automated Privileged Access Management (PAM) vaulting.",
         score: 3
       }
     ],
@@ -288,7 +288,7 @@ export const QUESTIONS = [
   {
     id: "Q5",
     domain: "AC",
-    text: "What levels of privilege restrictions and workstation hardening are applied?",
+    text: "What level of system hardening, protocol restriction, and privilege limitation is applied to IACS endpoints?",
     standards: {
       iec: "IEC 62443-4-2 (EDR 2.1 / 2.3)",
       nerc: "NERC CIP-007-6 (R2 / R5)",
@@ -297,22 +297,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No restrictions: HMIs run with permanent local Administrator privileges; USB ports, CMD, and browsers are active and open.",
+        text: "Default status: Local operator HMIs run permanently with local administrative privileges. General applications, browsers, command utilities, and unused logical/physical ports are enabled.",
         score: 0
       },
       {
         level: 1,
-        text: "Minor restrictions: Local admin is reserved, but non-essential software (browsers, email, office tools) remains installed on HMIs.",
+        text: "Basic account separation: Operator accounts run with reduced privileges, but non-essential software (browsers, legacy protocols) remains active and port services are left unhardened.",
         score: 1
       },
       {
         level: 2,
-        text: "Hardened configurations: Workstations are locked down using GPOs. Non-essential services, protocols, and unused physical ports are disabled.",
+        text: "Hardened Configurations: Endpoints are hardened according to official baselines (e.g. CIS benchmarks). Non-essential services, unnecessary legacy protocols (e.g. SMBv1, Telnet), and physical USB/NIC interfaces are disabled.",
         score: 2
       },
       {
         level: 3,
-        text: "Continuous Integrity: Workstations are fully hardened, utilize application whitelisting (AppLocker/EDR), and log deviations automatically.",
+        text: "Endpoint Integrity & Application Whitelisting: Systems utilize application whitelisting/allow-listing (AppLocker, EDR in block mode) to enforce absolute control over executing processes, accompanied by continuous configuration drift monitoring.",
         score: 3
       }
     ],
@@ -350,7 +350,7 @@ export const QUESTIONS = [
   {
     id: "Q6",
     domain: "AC",
-    text: "How are wireless networks and portable media (USBs, engineering laptops) governed?",
+    text: "How are wireless communications and transient physical interfaces (e.g. USB flash drives, contractor laptops) regulated in IACS zones?",
     standards: {
       iec: "IEC 62443-3-3 (SR 1.6) / IEC 62443-4-2",
       nerc: "NERC CIP-010-3 (R4)",
@@ -359,22 +359,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Unregulated: Anyone can connect USB devices or laptops. Open or weakly encrypted Wi-Fi reaches the OT floor.",
+        text: "Unregulated: USB devices and engineering tools connect directly to critical controllers without screening. Unencrypted or weakly secured Wi-Fi networks penetrate IACS boundaries.",
         score: 0
       },
       {
         level: 1,
-        text: "Policy only: Written policies exist prohibiting personal USBs, but no technical enforcement or scanning is configured.",
+        text: "Policy-only restriction: Corporate policies prohibit unauthorized media and personal laptops, but there are no technical controls, endpoint blocks, or file scanning stations.",
         score: 1
       },
       {
         level: 2,
-        text: "Enforced restrictions: USB ports are disabled via GPO/software. External files must pass through a dedicated scanner kiosk. Wi-Fi uses WPA3 Enterprise.",
+        text: "Technical validation: USB mass storage is disabled via Group Policy. Dynamic file ingestion must proceed through a dedicated scanning kiosk. Wireless channels enforce WPA3-Enterprise authentication.",
         score: 2
       },
       {
         level: 3,
-        text: "Zero-Trust Portable Media: Secure isolated kiosk scans, encrypts, and signs approved files on managed USB keys. Unauthorized USBs trigger SOC alerts.",
+        text: "Isolated Media Governance: Clean-room media gateways scan, verify, and digitally sign files. Strict endpoint rules prevent untrusted USB execution, and unauthorized ports automatically alert the SOC and trigger port shutdown.",
         score: 3
       }
     ],
@@ -414,7 +414,7 @@ export const QUESTIONS = [
   {
     id: "Q7",
     domain: "AV",
-    text: "What is the accuracy and mechanism of your OT hardware and software inventory?",
+    text: "What is the detection mechanism, granularity, and accuracy of your physical and logical IACS asset inventory?",
     standards: {
       iec: "IEC 62443-2-1 / IEC 62443-2-4",
       nerc: "NERC CIP-002-5.1",
@@ -423,22 +423,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No inventory: No documentation of assets; engineers find devices manually during downtime.",
+        text: "Undocumented / Reactive inventory: No formal inventory exists. Assets are tracked reactively during physical plant outages or upgrades.",
         score: 0
       },
       {
         level: 1,
-        text: "Static spreadsheets: An Excel file lists IP addresses and basic descriptions, updated manually or on a major upgrade.",
+        text: "Manual static registries: Spreadsheet registers track IP allocations and general system descriptions, updated manually or on a yearly basis.",
         score: 1
       },
       {
         level: 2,
-        text: "Semi-automated / Regular Audits: Inventories are updated quarterly, including software versions, firmware levels, and device models.",
+        text: "Validated automated scanning: Asset lists are audited quarterly. Inventories record detailed firmware revisions, software bills of material (SBOM), MAC addresses, and physical locations.",
         score: 2
       },
       {
         level: 3,
-        text: "Continuous Asset Discovery: Passive monitoring tools continuously discover devices, mapping firmware versions and software bills of materials (SBOM) automatically.",
+        text: "Continuous Passive Discovery: Specialized passive monitoring engines continuously inspect network traffic to discover assets in real-time, detailing configuration versions and firmware vulnerabilities without active disruption.",
         score: 3
       }
     ],
@@ -476,7 +476,7 @@ export const QUESTIONS = [
   {
     id: "Q8",
     domain: "AV",
-    text: "How are software and firmware vulnerabilities patched and managed in your OT environment?",
+    text: "How are firmware vulnerabilities and operating system patches evaluated, tested, and deployed within the IACS environment?",
     standards: {
       iec: "IEC 62443-2-4 (SP 03.01 - 03.09)",
       nerc: "NERC CIP-007-6 (R1 / R2)",
@@ -485,22 +485,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No patching: Devices are installed and left indefinitely. No vulnerability monitoring is performed.",
+        text: "No patching program: Operating systems, application packages, and controller firmware are left unpatched since factory deployment. Vulnerability reporting is absent.",
         score: 0
       },
       {
         level: 1,
-        text: "Reactive patching: Systems are patched only after an incident, major audit failure, or when vendor upgrades require it.",
+        text: "Ad-hoc / Reactive patching: Security patches are only applied following a verified breach, major audit failure, or during complex multi-year upgrade projects.",
         score: 1
       },
       {
         level: 2,
-        text: "Risk-based testing: Patches are monitored, tested on non-production systems, and deployed during planned maintenance windows.",
+        text: "Risk-prioritized deployment: Vulnerabilities are monitored weekly. Validated manufacturer patches are tested on replica test-beds and deployed during planned maintenance cycles.",
         score: 2
       },
       {
         level: 3,
-        text: "Structured & Shielded: Formal vulnerability management lifecycle. Virtual patching (IPS) shields unpatchable legacy systems; vendors certify patches.",
+        text: "Continuous Vulnerability Lifecycle: Structured lifecycle program. Vulnerability windows are mitigated via virtual patching (IPS rules), patches are certified by vendors before staging, and compensating controls protect legacy endpoints.",
         score: 3
       }
     ],
@@ -538,7 +538,7 @@ export const QUESTIONS = [
   {
     id: "Q9",
     domain: "AV",
-    text: "How is the integrity of supply-chain software and OEM firmware verified?",
+    text: "What validation controls are enforced to verify the integrity and provenance of third-party IACS software and firmware packages?",
     standards: {
       iec: "IEC 62443-4-1 (Secure Lifecycle) / IEC 62443-2-4",
       nerc: "NERC CIP-013-1 (R1 / R2)",
@@ -547,22 +547,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Untrusted: Firmware and configuration files are downloaded from unsecured sites, or provided on loose USBs by contractors.",
+        text: "No validation: System files and configurations are downloaded from arbitrary sources, or imported via third-party storage devices without hash or signature checks.",
         score: 0
       },
       {
         level: 1,
-        text: "Basic hashing: Hashes are verified manually if the vendor site prominently displays them, but this is optional.",
+        text: "Basic hashing checks: Checksums (SHA-256) are occasionally checked if provided on the OEM's documentation portal, but verification is not mandatory.",
         score: 1
       },
       {
         level: 2,
-        text: "Contractor SLA: Supply-chain contracts mandate security standards. Firmware is obtained only via secure vendor portals and hashes are verified.",
+        text: "Mandated Vendor Verification: Contract clauses require supply-chain verification. Software is obtained solely via authenticated vendor vaults, and cryptographic integrity is verified before ingestion.",
         score: 2
       },
       {
         level: 3,
-        text: "Cryptographic validation: Secure Boot validation on controllers, cryptographic verification of firmware signatures, and SBOM validation on all upgrades.",
+        text: "Hardware Root-of-Trust: Firmware updates enforce digital signature verification in the bootloader. Secure Boot (TPM-backed) is active on controllers, and SBOM artifacts are audited dynamically for supply-chain risk.",
         score: 3
       }
     ],
@@ -602,7 +602,7 @@ export const QUESTIONS = [
   {
     id: "Q10",
     domain: "TR",
-    text: "What security logging and monitoring capabilities exist in the OT environment?",
+    text: "What architectural mechanism is deployed for event log aggregation, security monitoring, and correlation within the IACS network?",
     standards: {
       iec: "IEC 62443-3-3 (SR 6.1 / 6.2)",
       nerc: "NERC CIP-007-6 (R3)",
@@ -611,22 +611,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No monitoring: Log files are disabled or ignored. Event logs are overwritten quickly due to lack of space.",
+        text: "No aggregation / Inactive logs: Log generation is disabled on controllers, switches, and HMIs, or logs are overwritten rapidly due to local storage limits.",
         score: 0
       },
       {
         level: 1,
-        text: "Local logging: Individual servers and switches write logs to local drives. Investigation is purely post-incident.",
+        text: "Local uncoordinated logging: Systems record security events to local event logs. Event investigation is purely reactive, occurring after a system failure or outage.",
         score: 1
       },
       {
         level: 2,
-        text: "Centralized Syslog: Critical server and firewall logs are forwarded to a central SIEM server located in the IT zone or a dedicated OT server.",
+        text: "Centralized Syslog forwarding: Event logs from critical IACS endpoints, network firewalls, and directory servers are forwarded to a dedicated central log repository.",
         score: 2
       },
       {
         level: 3,
-        text: "Managed OT-SOC: Real-time analysis of OT protocol logs with specialized alert correlations, monitored 24/7 by an OT-competent Security Operations Center.",
+        text: "Integrated OT SIEM & 24/7 SOC: Logs are streamed to an OT-specific SIEM. Alert logic is correlated across industrial networks and audited 24/7 by a specialized industrial Security Operations Center.",
         score: 3
       }
     ],
@@ -664,7 +664,7 @@ export const QUESTIONS = [
   {
     id: "Q11",
     domain: "TR",
-    text: "Is there a documented Incident Response Plan (IRP) for OT, and how often is it tested?",
+    text: "Is there an OT-specific Incident Response Plan (IRP) in place, and what is its operational testing frequency?",
     standards: {
       iec: "IEC 62443-2-1 / IEC 62443-2-4",
       nerc: "NERC CIP-008-6 (R1 / R2)",
@@ -673,22 +673,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No IRP: No plan. Actions during an event are reactive, relying on vendor calls or physical plant shutdowns.",
+        text: "No incident response capability: Incident mitigation relies on ad-hoc phone calls to system integrators or emergency manual plant shutdowns.",
         score: 0
       },
       {
         level: 1,
-        text: "IT-aligned plan: A generic corporate IT incident response plan is referenced, but lacks details on OT protocols or physical process impacts.",
+        text: "Unadapted IT response plans: Corporate IT incident plans are referenced, but they lack guidance on physical safety, chemical processes, or PLC containment.",
         score: 1
       },
       {
         level: 2,
-        text: "OT-specific IRP: A documented, separate plan with defined roles, safety-first playbooks, and clear communication guidelines.",
+        text: "Documented OT-Specific IRP: A dedicated incident plan details role matrices, emergency contact protocols, safety isolation procedures, and vendor escalation paths.",
         score: 2
       },
       {
         level: 3,
-        text: "Fully simulated IRP: Annual joint tabletop exercises and Red Team simulations involving control room operators, engineering, safety, and leadership.",
+        text: "Simulated IRP Tabletop & Red Team validation: The OT-IRP is updated regularly and validated via annual simulated scenarios involving operators, system engineers, corporate executives, and national CERT partners.",
         score: 3
       }
     ],
@@ -726,7 +726,7 @@ export const QUESTIONS = [
   {
     id: "Q12",
     domain: "TR",
-    text: "What network traffic visibility and intrusion detection (IDS) are deployed inside the OT network?",
+    text: "What network visibility and deep protocol analysis capabilities are active inside the IACS network?",
     standards: {
       iec: "IEC 62443-3-3 (SR 6.1 / 6.2)",
       nerc: "NERC CIP-007-6 (R3)",
@@ -735,22 +735,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "None: No network visibility inside the OT environment. Firewall logs are the only network records.",
+        text: "No network visibility: There is no logging or visibility of traffic moving laterally inside the OT environment.",
         score: 0
       },
       {
         level: 1,
-        text: "IT IDS: Standard intrusion detection systems are placed on IT-OT routers, but they do not parse industrial protocols (e.g. Modbus, DNP3).",
+        text: "Static border visibility: Firewall traffic logs at the boundary are analyzed, but internal network switches have no active mirroring or logging configurations.",
         score: 1
       },
       {
         level: 2,
-        text: "OT IDS Passive: SPAN/Mirror ports feed network traffic to an OT-specific IDS that detects protocol deviations and known industrial signatures.",
+        text: "Passive network monitoring (IDS): Switch mirror ports (SPAN) feed network traffic to a passive OT IDS to identify signature threats and anomalous network packets.",
         score: 2
       },
       {
         level: 3,
-        text: "DPI & Behavioral Analysis: Deep Packet Inspection (DPI) checks the payloads of industrial commands, mapping baseline traffic patterns to detect anomalies.",
+        text: "Deep Packet Inspection (DPI) & Baselining: Passive engines perform DPI to decode industrial commands (e.g. Modbus function codes, S7 Comm programming uploads) to alert on anomalous behavioral parameters.",
         score: 3
       }
     ],
@@ -790,7 +790,7 @@ export const QUESTIONS = [
   {
     id: "Q13",
     domain: "DR",
-    text: "What is your backup strategy for engineering project files, PLC logic, and HMI configurations?",
+    text: "What backup governance, storage isolation, and change tracing policies apply to IACS engineering project files, PLC logic, and HMI runtime parameters?",
     standards: {
       iec: "IEC 62443-2-4 (SP 09.01 - 09.05)",
       nerc: "NERC CIP-009-6 (R1)",
@@ -799,22 +799,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "No backups: No backup of PLC code or HMI configurations. Rebuilding requires OEM support or starting from scratch.",
+        text: "Absent backup capability: No copies of active controller configurations or HMI runtime environments exist. Recovery requires developer rebuilds or external support.",
         score: 0
       },
       {
         level: 1,
-        text: "Ad-hoc backups: Engineers keep backups of PLC code on personal laptops or shared drives. No schedule is defined.",
+        text: "Uncoordinated manual backups: Engineering files are occasionally backed up by individual specialists to shared IT folders or local engineering laptops on a reactive basis.",
         score: 1
       },
       {
         level: 2,
-        text: "Systematic backups: Automated scheduled backups are captured. Backups are stored on a separate server, with a weekly copy kept offline.",
+        text: "Centralized scheduled backups: Automated backups execute on a weekly schedule. Backup copies are stored on isolated backup hosts, with an air-gapped weekly backup rotation.",
         score: 2
       },
       {
         level: 3,
-        text: "Immutable Version Control: Backups are stored in an immutable, version-controlled OT code repository. Automated hashes verify changes from active controllers.",
+        text: "Immutable Version Control: Backups are stored in version-controlled repositories (e.g. Git-based industrial version control). Differences between running PLC code and backups are audited automatically.",
         score: 3
       }
     ],
@@ -852,7 +852,7 @@ export const QUESTIONS = [
   {
     id: "Q14",
     domain: "DR",
-    text: "How frequently and thoroughly are backup restorations tested for OT systems?",
+    text: "How are disaster recovery restoration runs and IACS bare-metal restore capabilities validated?",
     standards: {
       iec: "IEC 62443-2-4 (SP 09.04)",
       nerc: "NERC CIP-009-6 (R2)",
@@ -861,22 +861,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Never tested: Backups have never been restored. The ability to restore from files is unverified.",
+        text: "Untested recovery: The restoration process has never been executed or tested. Restore parameters remain theoretical.",
         score: 0
       },
       {
         level: 1,
-        text: "Theoretical check: Backups are verified as completed via log checklists, but actual restoration is rarely executed.",
+        text: "Log verification only: Backup files are checked for completion logs, but actual restoration of operating system images or PLC code is not tested.",
         score: 1
       },
       {
         level: 2,
-        text: "Regular recovery drills: Restore drills are performed annually on a dedicated offline test bench, covering HMIs and PLCs.",
+        text: "Staged restoration drills: Disaster recovery restores are executed annually on dedicated staging systems to verify configuration loads.",
         score: 2
       },
       {
         level: 3,
-        text: "Full bare-metal validation: Comprehensive Disaster Recovery testing is conducted, simulating a complete plant loss to validate restoration timelines (RTO/RPO).",
+        text: "Full bare-metal restore validation: Live physical restoration simulations are conducted annually on redundant hot-standby systems to confirm restoration timelines (RTO/RPO) and data integrity.",
         score: 3
       }
     ],
@@ -914,7 +914,7 @@ export const QUESTIONS = [
   {
     id: "Q15",
     domain: "DR",
-    text: "What physical security controls and utility redundancy (UPS, generators) protect critical OT locations?",
+    text: "What physical protection boundaries, environment sensors, and utility redundancies safeguard critical IACS control rooms and equipment cabinets?",
     standards: {
       iec: "IEC 62443-3-3 (SR 7.1 / 7.2)",
       nerc: "NERC CIP-006-6 (Physical Security)",
@@ -923,22 +923,22 @@ export const QUESTIONS = [
     choices: [
       {
         level: 0,
-        text: "Unsecured: Control rooms are unlocked, cabinet doors are open. Power is single-feed with no UPS or generator support.",
+        text: "Unprotected: Cabinets and servers remain unlocked in shared spaces. Power is single-feed without battery backup, and environmental monitors are absent.",
         score: 0
       },
       {
         level: 1,
-        text: "Basic control: Key locks exist on control room doors. Basic consumer-grade UPS devices back up critical servers for <15 minutes.",
+        text: "Basic barrier access: Key locks secure control doors and server cabinets. Standard commercial UPS arrays provide short battery support (<15 minutes) for core servers.",
         score: 1
       },
       {
         level: 2,
-        text: "Hardened: Access to control room is card-controlled and monitored. Industrial-grade UPS and generator backup exist, supporting operations for hours.",
+        text: "Hardened physical zoning: Access is badge-controlled and recorded. Cabinets reside in climate-controlled server rooms supported by dedicated industrial UPS arrays and generators.",
         score: 2
       },
       {
         level: 3,
-        text: "Defense-in-depth: Biometric physical access, continuous CCTV tracking, environmental monitors in cabinets, redundant UPS lines, and automatic failovers.",
+        text: "Defense-in-depth security: Dual-factor biometric controls protect access, backed by continuous CCTV. Cabinets have environmental alarm units, and redundant power lines connect with automated automatic transfer switches.",
         score: 3
       }
     ],
