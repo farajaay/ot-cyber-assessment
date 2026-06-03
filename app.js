@@ -433,7 +433,7 @@ class OTAssessmentApp {
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       polygon.setAttribute("points", points.join(" "));
       polygon.setAttribute("fill", "none");
-      polygon.setAttribute("stroke", "rgba(255, 255, 255, 0.05)");
+      polygon.setAttribute("stroke", "rgba(0, 0, 0, 0.07)");
       polygon.setAttribute("stroke-width", "1");
       svg.appendChild(polygon);
       
@@ -442,7 +442,7 @@ class OTAssessmentApp {
       const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
       labelText.setAttribute("x", firstCoord.x + 5);
       labelText.setAttribute("y", firstCoord.y + 3);
-      labelText.setAttribute("fill", "rgba(255, 255, 255, 0.2)");
+      labelText.setAttribute("fill", "rgba(0, 0, 0, 0.35)");
       labelText.setAttribute("font-size", "8px");
       labelText.setAttribute("font-family", "JetBrains Mono");
       labelText.textContent = `L${level}`;
@@ -457,7 +457,7 @@ class OTAssessmentApp {
       line.setAttribute("y1", center);
       line.setAttribute("x2", outerCoord.x);
       line.setAttribute("y2", outerCoord.y);
-      line.setAttribute("stroke", "rgba(255, 255, 255, 0.05)");
+      line.setAttribute("stroke", "rgba(0, 0, 0, 0.05)");
       line.setAttribute("stroke-width", "1");
       svg.appendChild(line);
       
@@ -491,13 +491,13 @@ class OTAssessmentApp {
     
     const userPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     userPolygon.setAttribute("points", userPoints.join(" "));
-    userPolygon.setAttribute("fill", "rgba(0, 242, 254, 0.15)");
+    userPolygon.setAttribute("fill", "rgba(58, 134, 255, 0.12)");
     userPolygon.setAttribute("stroke", "var(--accent-cyan)");
     userPolygon.setAttribute("stroke-width", "2.5");
     userPolygon.setAttribute("stroke-linejoin", "round");
     
     // Add glowing filter to the line
-    userPolygon.style.filter = "drop-shadow(0 0 6px rgba(0, 242, 254, 0.4))";
+    userPolygon.style.filter = "drop-shadow(0 4px 10px rgba(58, 134, 255, 0.25))";
     
     svg.appendChild(userPolygon);
     
